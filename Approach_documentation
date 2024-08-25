@@ -1,0 +1,39 @@
+This document provides both the current approach and a better approach that's in my mind.
+
+Current Approach: The current approaches uses font-size of the text for classification whether the text is a Title, header etc. I used "pdfminer" library to extract data and perform operations, since this
+                  library was the most reliable.
+How the approach works: It determines on the basis of Font size.
+                        Header: A header usually comes before a Title and usually is on top of a PDF. So until Title is found, everything above of it is labelled as a Header. 
+                        Title: A PDF will generally have only one Title and its Font size will be the highest.
+                        Heading: To Determine a heading, usually headings have the second-highest font size.
+                        Normal Text/Paragraph: The third highest are usually subheadings or normal text. Subheadings usually are also highlighted in Bold, but since we are not considering font style, we cannot
+                                               determine subheadings. Hence, we will go with normal text.
+                        
+
+Limitations of pdfminer: 
+1 - This is a very unreliable library for PDF's with very dynamic content.
+2 - There are  inaccuracies of text properties . For example - For sample pdf 3 and 4 it was showing same font style for headings and paragraph although the headings were highlighted in Bold, making use of font-style
+    unreliable.
+3 - It was showing textual data first and then graphs and then images without following the order of elements. As per graphs and tables it was just showing the coordinates
+    Because of this, it was first reading even tabular data as text. So if I had to put the table data accuractely then I would have had to first check the coordinates of the text and see if it fits in the graph element
+    and then remove this text from text elements. This would have increased a lot of computation while still being unreliable because of above limitations.
+    This also resulted in issues like if I wanted to classify footers, if there are numbers with same text properties then it was failing.
+4 - Content of images, graphs etc couldn't be extracted.
+
+################################################################################################################################################################################################################
+
+Better approach I had in mind: We can use a OCR tool like Tesseract or something thats even better. Using OCR we can identify elements properly and extract them as they are
+                               i.e if the OCR is able to identify table and extract that text within that element alongwith properties, we can create a regex or a proper rule set saying what is the type of element
+                               that we extracted and also its data. But this regex or rule-set wouldn't be dynamic enough if every PDF has a different format.
+                               We can also feed this data extracted into a pre-trained LLM like OpenAI or ClaudeAI etc which can do the classification for us, instead of writing our own regex. Although this would
+                               result in use of money for API calls.
+
+################################################################################################################################################################################################################
+
+My Observations/other small approaches I tried - 
+
+1 - Using PyMuPDF/fitz - This was also having the exact limitations of pdfminer. Plus the ordering of data was even more messed up in this case.
+2 - Uploading PDF in ChatGPT - It worked fine for small PDf like sample PDF 1, but after that it couldn't analyse and gave "The document might require more advanced techniques for proper extraction, particularly
+                               for tables, images, and identifying the exact text elements accurately. If you have any specific needs or want to try a different approach, let me know!" as output.
+3 - Uploading extracted data in ChatGPT - This classified element type much better than my approach although even that wasn't much accurate plus there was no way we can paste tables, images etc.
+  
